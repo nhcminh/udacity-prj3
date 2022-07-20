@@ -44,7 +44,7 @@ jobs:
           name: test front-end
           command: |
             cd frontend
-            npm install --save-dev jest-junit
+            npm install
             npm run test
   test-backend:
     docker:
@@ -57,7 +57,7 @@ jobs:
           name: test back-end
           command: |
             cd backend
-            npm install --save-dev jest-junit
+            npm install
             npm run test
   scan-frontend:
     docker:
@@ -70,7 +70,7 @@ jobs:
          name: scan-frontend
          command: |
           cd frontend
-          # npm install oauth-sign@^0.9.0
+          npm install oauth-sign@^0.9.0
           npm audit fix --audit-level=critical
           npm audit --audit-level=critical
 
@@ -85,7 +85,6 @@ jobs:
          name: scan-backend
          command: |
           cd backend
-          # npm install oauth-sign@^0.9.0
           npm audit fix --audit-level=critical
           npm audit --audit-level=critical
 workflows:
