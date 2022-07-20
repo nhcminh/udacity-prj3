@@ -44,6 +44,7 @@ jobs:
           name: test front-end
           command: |
             cd frontend
+            npm install --save-dev jest-junit
             npm run test
   test-backend:
     docker:
@@ -56,6 +57,7 @@ jobs:
           name: test back-end
           command: |
             cd backend
+            npm install --save-dev jest-junit
             npm run test
   scan-frontend:
     docker:
