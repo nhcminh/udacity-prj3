@@ -81,11 +81,11 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-         keys: [frontend-scan]
+         keys: [backend-scan]
       - run:
-         name: scan-frontend
+         name: scan-backend
          command: |
-          cd frontend
+          cd backend
           npm install
           # npm install oauth-sign@^0.9.0
           npm audit fix --audit-level=critical
