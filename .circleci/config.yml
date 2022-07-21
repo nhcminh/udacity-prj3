@@ -1,5 +1,5 @@
 version: 2.1
-orbs: 
+orbs:
   slack: circleci/slack@4.10.1
 jobs:
   build-frontend:
@@ -31,12 +31,13 @@ jobs:
             cd backend
             ls -la && npm install
             npm run build
-      - run: echo "deploy my app"
       - slack/notify:
+          channel: udacity-project-3
           event: fail
           mentions: '@EngineeringTeam'
           template: basic_fail_1
       - slack/notify:
+          channel: udacity-project-3
           event: pass
           template: success_tagged_deploy_1
       - save_cache:
@@ -68,7 +69,6 @@ jobs:
             cd backend
             npm install
             npm run test
-      - run: echo "test my app"
   scan-frontend:
     docker:
       - image: circleci/node:13.8.0
