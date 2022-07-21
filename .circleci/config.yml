@@ -1,5 +1,6 @@
 version: 2.1
-
+orbs: 
+  slack: circleci/slack@4.10.1
 jobs:
   build-frontend:
     docker:
@@ -30,6 +31,14 @@ jobs:
             cd backend
             ls -la && npm install
             npm run build
+      - run: echo "deploy my app"
+      - slack/notify:
+          event: fail
+          mentions: '@EngineeringTeam'
+          template: basic_fail_1
+      - slack/notify:
+          event: pass
+          template: success_tagged_deploy_1
       - save_cache:
           paths: [backend/node_modules]
           key: backend-build
@@ -59,6 +68,7 @@ jobs:
             cd backend
             npm install
             npm run test
+      - run: echo "test my app"
   scan-frontend:
     docker:
       - image: circleci/node:13.8.0
@@ -99,8 +109,26 @@ workflows:
       - test-frontend:
          requires: [build-frontend]
       - test-backend:
+         filters:
+            tags:
+              only: /^v.*/
          requires: [build-backend]
       - scan-frontend:
           requires: [build-frontend]
       - scan-backend:
           requires: [build-backend]
+      - slack/on-hold:
+          context: slack-secrets
+          filters:
+            tags:
+              only: /^v.*/
+          requires:
+            - test-backend
+      - pause_workflow:
+          filters:
+            tags:
+              only: /^v.*/
+          requires:
+            - test-backend
+            - slack/on-hold
+          type: approval
