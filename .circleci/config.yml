@@ -29,7 +29,7 @@ jobs:
           name: Build back-end
           command: |
             cd backend
-            ls -la && npm instal
+            ls -la && npm install
             npm run build
       - slack/notify:
           channel: general
