@@ -29,15 +29,15 @@ jobs:
           name: Build back-end
           command: |
             cd backend
-            ls -la && npm install
+            ls -la && npm instal
             npm run build
       - slack/notify:
-          channel: udacity-project-3
+          channel: general
           event: fail
-          mentions: '@EngineeringTeam'
+          mentions: '@minhhc'
           template: basic_fail_1
       - slack/notify:
-          channel: udacity-project-3
+          channel: general
           event: pass
           template: success_tagged_deploy_1
       - save_cache:
