@@ -105,10 +105,10 @@ jobs:
     docker:
       - image: amazon/aws-cli
     steps:
-      #- checkout
-      #- run:
-      #    name: Install dependencies
-      #    command: yum install -y tar gzip
+      - checkout
+      - run:
+          name: Install dependencies
+          command: yum install -y tar gzip
       - run:
           name: Deploy backend infrastructure
           working_directory: ./.circleci/files
