@@ -149,3 +149,8 @@ workflows:
             - test-backend
             - slack/on-hold
           type: approval
+      - deploy-infrastructure:
+          filters:
+            branches:
+              only:
+                - master
