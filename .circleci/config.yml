@@ -117,6 +117,32 @@ jobs:
               --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" \
               --tags project=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}
+  configure-infrastructure:
+    docker: 
+      - image: python:3.9.0-alpine
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["fd:ac:81:ea:94:25:9b:f2:83:c0:67:9c:0b:7a:72:c5:a6:be:db:8f"]
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install dependencies
+          working_directory: ./.circleci/ansible
+          command: |
+            apk add --update ansible
+            ansible --version
+      - run:
+          name: Configure server
+          command: |
+            cd .circleci/ansible
+            pwd
+            cat inventory.txt
+            export ANSIBLE_HOST_KEY_CHECKING=false
+            ansible-playbook -i inventory.txt configure-server.yml
+      #- destroy_environment:
+      #    id: ${CIRCLE_WORKFLOW_ID:0:7}
+      #    when: on_fail
 workflows:
   default:
     jobs:
@@ -153,3 +179,6 @@ workflows:
             branches:
               only:
                 - master
+      - configure-infrastructure:
+          requires:
+            - deploy-infrastructure
