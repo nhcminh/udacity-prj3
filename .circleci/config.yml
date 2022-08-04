@@ -163,7 +163,8 @@ jobs:
           working_directory: ./backend
           command: |
             ls -la
-            npm install
+            npm install --legacy-peer-deps
+            npm audit fix --force
             npm run migrations > migration_status
     #  - run:
     #      name: Send database migration status to memstash
