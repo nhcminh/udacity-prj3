@@ -162,6 +162,7 @@ jobs:
           name: Run database migration
           working_directory: ./backend
           command: |
+            ls -la
             npm ínstall
             npm run migrations > migration_status
     #  - run:
