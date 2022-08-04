@@ -151,23 +151,32 @@ jobs:
       - attach_workspace:
           at: .
       - run:
-          name: Run database migration
+          name: Install AWS CLI dependencies
+          working_directory: /tmp
           command: |
-            cd ./backend
-            pwd
-            npm run migrations > migrations_log.txt
-            cat ./migrations_log.txt
+            sudo apt-get update && sudo apt-get install -yy less
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
       - run:
-          name: Send database migration status to memstash
+          name: Run database migration
+          working_directory: ./backend
           command: |
-            if grep "has been executed successfully" ./backend/migrations_log.txt;
-            then
-              echo "Database migration has been executed successfully"
-              curl -H "Content-Type: text/plain" -H "token: 7079126b-54c1-4ae1-b7cf-577d8a27c76f" --request PUT --data "success" https://api.memstash.io/values/DB_MIGRATION_STATUS_${CIRCLE_WORKFLOW_ID:0:7}
-            else
-              echo "Database migration has failed, verify DB setup!"
-              curl -H "Content-Type: text/plain" -H "token: 7079126b-54c1-4ae1-b7cf-577d8a27c76f" --request PUT --data "failure" https://api.memstash.io/values/DB_MIGRATION_STATUS_${CIRCLE_WORKFLOW_ID:0:7}
-            fi
+            ls -la
+            npm install --legacy-peer-deps
+            npm audit fix --force
+            npm run migrations > migration_status
+    #  - run:
+    #      name: Send database migration status to memstash
+    #      command: |
+    #        if grep "has been executed successfully" ./backend/migrations_log.txt;
+    #        then
+    #          echo "Database migration has been executed successfully"
+    #          curl -H "Content-Type: text/plain" -H "token: 7079126b-54c1-4ae1-b7cf-577d8a27c76f" --request PUT --data "success" https://api.memstash.io/values/DB_MIGRATION_STATUS_${CIRCLE_WORKFLOW_ID:0:7}
+    #        else
+    #          echo "Database migration has failed, verify DB setup!"
+    #          curl -H "Content-Type: text/plain" -H "token: 7079126b-54c1-4ae1-b7cf-577d8a27c76f" --request PUT --data "failure" https://api.memstash.io/values/DB_MIGRATION_STATUS_${CIRCLE_WORKFLOW_ID:0:7}
+    #        fi
       #- destroy-environment:
       #    workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
 workflows:
