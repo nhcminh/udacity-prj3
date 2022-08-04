@@ -163,7 +163,7 @@ jobs:
           working_directory: ./backend
           command: |
             ls -la
-            npm ínstall
+            npm install
             npm run migrations > migration_status
     #  - run:
     #      name: Send database migration status to memstash
