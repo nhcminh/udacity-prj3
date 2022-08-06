@@ -164,7 +164,7 @@ jobs:
           command: |
             ls -la
             npm cache clean --force
-            rm -rf node_modules
+            rm -rf package-lock.json
             npm install
             npm run migrations > migration_status
     #  - run:
