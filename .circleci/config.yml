@@ -148,25 +148,18 @@ jobs:
       - image: circleci/node:13.8.0
     steps:
       - checkout
+      - restore_cache:
+          keys: [backend-build-cache]
       - attach_workspace:
           at: .
-      #- run:
-      #    name: Install AWS CLI dependencies
-      #    working_directory: /tmp
-      #    command: |
-      #      sudo apt-get update && sudo apt-get install -yy less
-      #      curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-      #      unzip awscliv2.zip
-      #      sudo ./aws/install
+      - create-dotenv-file
       - run:
           name: Run database migration
-          working_directory: ./backend
           command: |
-            ls -la
-            npm cache clean --force
-            rm -rf package-lock.json
-            npm install
-            npm run migrations > migration_status
+            cd ./backend
+            pwd
+            npm run migrations > migrations_log.txt
+            cat ./migrations_log.txt
     #  - run:
     #      name: Send database migration status to memstash
     #      command: |
