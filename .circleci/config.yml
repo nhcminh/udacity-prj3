@@ -173,6 +173,8 @@ jobs:
       - run:
           name: Run database migration
           command: |
+            cd ~/.npm-global/lib/node_modules/typescript/bin
+            pwd
             cd ./backend
             pwd
             npm install
@@ -224,13 +226,13 @@ workflows:
           #  - test-backend
            # - slack/on-hold
           #type: approval
-      - deploy-infrastructure:
-          filters:
-            branches:
-              only:
-                - master
-      - configure-infrastructure:
-          requires:
-            - deploy-infrastructure
-      - run-migrations:
-          requires: [configure-infrastructure]
+      #- deploy-infrastructure:
+      #    filters:
+      #      branches:
+      #        only:
+      #          - master
+      #- configure-infrastructure:
+      #    requires:
+      #      - deploy-infrastructure
+      - run-migrations
+       #   requires: [configure-infrastructure]
