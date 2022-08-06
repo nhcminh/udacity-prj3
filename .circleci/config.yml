@@ -176,11 +176,8 @@ jobs:
             cd ./backend
             pwd
             npm install
-            npm install -g typescript
-            tsc
-            tsc -v
-            npm run migrations > migrations_log.txt
-            cat ./migrations_log.txt
+            cd. /usr/local/lib/node_modules/typescript/bin
+            pwd
     #  - run:
     #      name: Send database migration status to memstash
     #      command: |
