@@ -18,6 +18,23 @@ commands:
             echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "./backend/.env"
             echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "./backend/.env"
             echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "./backend/.env"
+  destroy-environment:
+    description: Destroy backend and frontend cloudformation stacks given a workflow ID.
+    parameters:
+      workflowID:
+        type: string  
+    steps:
+      - run:
+          name: Echo workflow ID that is going be be destroyed
+          when: on_fail
+          command: echo "WorkflowID=${CIRCLE_WORKFLOW_ID:0:7}"
+      - run:
+          name: Destroy backend stack
+          when: on_fail
+          command: |
+            aws s3 rm s3://udapeople-<< parameters.workflowID >> --recursive
+            aws s3 rb s3://udapeople-<< parameters.workflowID >> --force
+            aws cloudformation delete-stack --stack-name udapeople-backend-<< parameters.workflowID >>
 jobs:
   build-frontend:
     docker:
@@ -157,9 +174,8 @@ jobs:
             cat inventory.txt
             export ANSIBLE_HOST_KEY_CHECKING=false
             ansible-playbook -i inventory.txt configure-server.yml
-      #- destroy_environment:
-      #    id: ${CIRCLE_WORKFLOW_ID:0:7}
-      #    when: on_fail
+      - destroy-environment:
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
   run-migrations:
     docker:
       - image: circleci/node:13.8.0
@@ -194,41 +210,22 @@ jobs:
 workflows:
   default:
     jobs:
-      #- build-frontend
-      #- build-backend
-      #- test-frontend:
-      #   requires: [build-frontend]
-      #- test-backend:
-      #   filters:
-      #      tags:
-      #        only: /^v.*/
-      #   requires: [build-backend]
-      #- scan-frontend:
-      #    requires: [build-frontend]
-      #- scan-backend:
-      #    requires: [build-backend]
-      #- slack/on-hold:
-      #    context: slack-secrets
-      #    filters:
-      #      tags:
-      #        only: /^v.*/
-      #    requires:
-      #      - test-backend
-      #- pause_workflow:
-      #    filters:
-       #     tags:
-        #      only: /^v.*/
-         # requires:
-          #  - test-backend
-           # - slack/on-hold
-          #type: approval
-      #- deploy-infrastructure:
-      #    filters:
-      #      branches:
-      #        only:
-      #          - master
-      #- configure-infrastructure:
-      #    requires:
-      #      - deploy-infrastructure
-      - run-migrations
-       #   requires: [configure-infrastructure]
+      - build-frontend
+      - build-backend
+      - test-frontend:
+          requires: [build-frontend]
+      - test-backend:
+          requires: [build-backend]
+      - scan-backend:
+          requires: [build-backend]
+      - scan-frontend:
+          requires: [build-frontend]
+      - deploy-infrastructure:
+          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+          filters:
+            branches:
+              only: [main]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]
+      - run-migrations:
+          requires: [configure-infrastructure]
