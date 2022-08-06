@@ -176,7 +176,7 @@ jobs:
             cd ./backend
             pwd
             npm install
-            cd /usr/local/lib/node_modules/typescript/bin
+            cd ~/.npm-global/lib/node_modules/typescript/bin
             pwd
     #  - run:
     #      name: Send database migration status to memstash
