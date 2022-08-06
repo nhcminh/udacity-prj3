@@ -17,9 +17,10 @@
       wait_for_connection:
         delay: 0
         timeout: 600
-        
+
   # Get the environment variables from CircleCI and add to the EC2 instance
   environment:
+    - ENVIRONMENT: "{{ lookup('env', 'ENVIRONMENT') }}"
     - TYPEORM_CONNECTION: "{{ lookup('env', 'TYPEORM_CONNECTION')}}"
     - TYPEORM_ENTITIES: "{{ lookup('env', 'TYPEORM_ENTITIES')}}"
     - TYPEORM_HOST: "{{ lookup('env', 'TYPEORM_HOST')}}"
