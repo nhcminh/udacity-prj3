@@ -163,6 +163,8 @@ jobs:
           working_directory: ./backend
           command: |
             ls -la
+            npm cache clean --force
+            rm -rf node_modules
             npm install
             npm run migrations > migration_status
     #  - run:
