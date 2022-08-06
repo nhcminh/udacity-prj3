@@ -176,7 +176,8 @@ jobs:
             cd ./backend
             pwd
             npm install
-            npm install typescript
+            tsc
+            tsc -v
             npm run migrations > migrations_log.txt
             cat ./migrations_log.txt
     #  - run:
