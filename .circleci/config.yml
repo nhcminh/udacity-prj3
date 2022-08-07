@@ -188,11 +188,14 @@ jobs:
           at: .
       - create-dotenv-file
       - run:
-          name: Run database migration
+          name: install node
           command: |
             cd ./backend
-            pwd
             npm install
+      - run:
+          name: Run database migration
+          command: |
+            pwd
             npm run migrations > migrations_log.txt
             cat ./migrations_log.txt
     #  - run:
