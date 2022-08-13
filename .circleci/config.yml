@@ -18,7 +18,7 @@ commands:
             echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "./backend/.env"
             echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "./backend/.env"
             echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "./backend/.env"
-  destroy-environment:
+  destroy_environment:
     description: Destroy backend and frontend cloudformation stacks given a workflow ID.
     parameters:
       workflowID:
@@ -199,7 +199,7 @@ jobs:
             cat inventory.txt
             export ANSIBLE_HOST_KEY_CHECKING=false
             ansible-playbook -i inventory.txt configure-server.yml
-      - destroy-environment:
+      - destroy_environment:
           workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
   run-migrations:
     docker:
@@ -232,7 +232,7 @@ jobs:
                 curl https://kvdb.io/4bkXvYSkimAiAPH5oL6hx3/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d 'fail migrate'
               fi
               echo "WorkflowID=${CIRCLE_WORKFLOW_ID:0:7}"
-      - destroy-environment:
+      - destroy_environment:
           workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
   deploy-frontend:
     docker:
@@ -275,8 +275,7 @@ jobs:
           paths:
             - frontend/dist
       - destroy_environment:
-          id: ${CIRCLE_WORKFLOW_ID:0:7}
-          when: on_fail
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert_migrations:
           id: ${CIRCLE_WORKFLOW_ID:0:7}
           when: on_fail
@@ -304,8 +303,7 @@ jobs:
             cat inventory
             ansible-playbook -i inventory deploy-server.yaml -vv
       - destroy_environment:
-          id: ${CIRCLE_WORKFLOW_ID:0:7}
-          when: on_fail
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert_migrations:
           id: ${CIRCLE_WORKFLOW_ID:0:7}
           when: on_fail
