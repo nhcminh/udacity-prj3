@@ -161,11 +161,11 @@ jobs:
       - image: amazon/aws-cli
     steps:
       - checkout
-      - attach_workspace:
-          at: .
       - run:
           name: Install dependencies
           command: yum install -y tar gzip
+      - attach_workspace:
+          at: .
       - run:
           name: Deploy backend infrastructure
           command: |
@@ -253,8 +253,6 @@ jobs:
       - image: circleci/node:13.8.0
     steps:
       - checkout
-      - attach_workspace:
-          at: .
       - run:
           name: Install AWS CLI dependencies
           working_directory: /tmp
@@ -263,6 +261,8 @@ jobs:
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
             unzip awscliv2.zip
             sudo ./aws/install
+      - attach_workspace:
+          at: .
       - run:
           name: Rebuild frontend with backend API Url
           working_directory: ./frontend
