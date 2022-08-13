@@ -47,7 +47,7 @@ commands:
           name: Revert migrations
           working_directory: ./backend
           command: |
-            SUCCESS=$(curl https://kvdb.io/4bkXvYSkimAiAPH5oL6hx3/migration_<< parameters.id >>)
+            SUCCESS=$(curl -k https://kvdb.io/4bkXvYSkimAiAPH5oL6hx3/migration_<< parameters.id >>)
             echo $SUCCESS
             if [[ "$SUCCESS" == "success" ]]
             then
@@ -164,6 +164,8 @@ jobs:
       - run:
           name: Install dependencies
           command: yum install -y tar gzip
+      - attach_workspace:
+          at: .
       - run:
           name: Deploy backend infrastructure
           command: |
@@ -172,10 +174,13 @@ jobs:
               --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" \
               --tags project=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}
+      - run:
+          name: Deploy frontend infrastructure
+          command: |
             aws cloudformation deploy \
-              --template-file .circleci/files/cloudfront.yml \
-              --stack-name InitialStack-${CIRCLE_WORKFLOW_ID:0:7}\
-              --parameter-overrides WorkflowID=udapeople-${CIRCLE_WORKFLOW_ID:0:7}
+              --template-file .circleci/files/frontend.yml \
+              --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"\
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
   configure-infrastructure:
     docker: 
       - image: python:3.9.0-alpine
@@ -212,6 +217,14 @@ jobs:
       - attach_workspace:
           at: .
       - run:
+          name: Install AWS CLI dependencies
+          working_directory: /tmp
+          command: |
+            sudo apt-get update && sudo apt-get install -yy less
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+      - run:
           name: Run database migration
           command: |
             cd ./backend
@@ -226,10 +239,10 @@ jobs:
               if grep -q "has been executed successfully" migration_status
               then
                 echo "DB migration was successful, will update kvdb..."
-                curl https://kvdb.io/4bkXvYSkimAiAPH5oL6hx3/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d 'successfully migrate'
+                curl -k https://kvdb.io/4bkXvYSkimAiAPH5oL6hx3/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d 'successfully migrate'
               else
                 echo "DB migration failed, please verify setup! Probably the database already exists. Verify setup!"
-                curl https://kvdb.io/4bkXvYSkimAiAPH5oL6hx3/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d 'fail migrate'
+                curl -k https://kvdb.io/4bkXvYSkimAiAPH5oL6hx3/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d 'fail migrate'
               fi
               echo "WorkflowID=${CIRCLE_WORKFLOW_ID:0:7}"
       - destroy_environment:
@@ -240,8 +253,6 @@ jobs:
       - image: circleci/node:13.8.0
     steps:
       - checkout
-      - attach_workspace:
-          at: .
       - run:
           name: Install AWS CLI dependencies
           working_directory: /tmp
@@ -250,6 +261,8 @@ jobs:
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
             unzip awscliv2.zip
             sudo ./aws/install
+      - attach_workspace:
+          at: .
       - run:
           name: Rebuild frontend with backend API Url
           working_directory: ./frontend
@@ -261,7 +274,7 @@ jobs:
             export API_URL="http://${BACKEND_IP}:3030"
             echo "API_URL = ${API_URL}"
             echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
-            cat frontend/.env
+            cat frontend.env
       - run:
           name: Deploy frontend objects to S3
           working_directory: ./frontend
@@ -300,8 +313,9 @@ jobs:
           name: Deploy backend
           working_directory: ./.circleci/ansible
           command: |
-            cat inventory
-            ansible-playbook -i inventory deploy-server.yaml -vv
+            pwd
+            cat inventory.txt
+            ansible-playbook -i inventory.txt deploy-server.yaml -vv
       - destroy_environment:
           workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert_migrations:
