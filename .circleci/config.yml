@@ -174,8 +174,9 @@ jobs:
               --tags project=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}
             aws cloudformation deploy \
               --template-file .circleci/files/cloudfront.yml \
-              --stack-name InitialStack-${CIRCLE_WORKFLOW_ID:0:7}\
-              --parameter-overrides WorkflowID=udapeople-${CIRCLE_WORKFLOW_ID:0:7}
+              --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"\
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
+              --tags project=udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}
   configure-infrastructure:
     docker: 
       - image: python:3.9.0-alpine
@@ -211,6 +212,14 @@ jobs:
           keys: [backend-build-cache]
       - attach_workspace:
           at: .
+      - run:
+          name: Install AWS CLI dependencies
+          working_directory: /tmp
+          command: |
+            sudo apt-get update && sudo apt-get install -yy less
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
       - run:
           name: Run database migration
           command: |
