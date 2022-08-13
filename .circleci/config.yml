@@ -35,6 +35,27 @@ commands:
             aws s3 rm s3://udapeople-<< parameters.workflowID >> --recursive
             aws s3 rb s3://udapeople-<< parameters.workflowID >> --force
             aws cloudformation delete-stack --stack-name udapeople-backend-<< parameters.workflowID >>
+  revert_migrations:
+    description: Revert the last migration if successfully run in the current workflow.
+    parameters:
+      when:
+        type: string
+      id:
+        type: string
+    steps:
+      - run:
+          name: Revert migrations
+          working_directory: ./backend
+          command: |
+            SUCCESS=$(curl https://kvdb.io/4bkXvYSkimAiAPH5oL6hx3/migration_<< parameters.id >>)
+            echo $SUCCESS
+            if [[ "$SUCCESS" == "success" ]]
+            then
+              pwd
+              ls -la
+              npm run migrations:revert
+            fi
+          when: << parameters.when >>
 jobs:
   build-frontend:
     docker:
@@ -198,19 +219,96 @@ jobs:
             npm install
             npm run migrations > migrations_log.txt
             cat ./migrations_log.txt
-    #  - run:
-    #      name: Send database migration status to memstash
-    #      command: |
-    #        if grep "has been executed successfully" ./backend/migrations_log.txt;
-    #        then
-    #          echo "Database migration has been executed successfully"
-    #          curl -H "Content-Type: text/plain" -H "token: 7079126b-54c1-4ae1-b7cf-577d8a27c76f" --request PUT --data "success" https://api.memstash.io/values/DB_MIGRATION_STATUS_${CIRCLE_WORKFLOW_ID:0:7}
-    #        else
-    #          echo "Database migration has failed, verify DB setup!"
-    #          curl -H "Content-Type: text/plain" -H "token: 7079126b-54c1-4ae1-b7cf-577d8a27c76f" --request PUT --data "failure" https://api.memstash.io/values/DB_MIGRATION_STATUS_${CIRCLE_WORKFLOW_ID:0:7}
-    #        fi
-      #- destroy-environment:
-      #    workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
+      - run:
+            name: Send migration results to memstash
+            working_directory: ./backend
+            command: |
+              if grep -q "has been executed successfully" migration_status
+              then
+                echo "DB migration was successful, will update kvdb..."
+                curl https://kvdb.io/4bkXvYSkimAiAPH5oL6hx3/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d 'successfully migrate'
+              else
+                echo "DB migration failed, please verify setup! Probably the database already exists. Verify setup!"
+                curl https://kvdb.io/4bkXvYSkimAiAPH5oL6hx3/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d 'fail migrate'
+              fi
+              echo "WorkflowID=${CIRCLE_WORKFLOW_ID:0:7}"
+      - destroy-environment:
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
+  deploy-frontend:
+    docker:
+      # Docker image that supports NodeJS
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install AWS CLI dependencies
+          working_directory: /tmp
+          command: |
+            sudo apt-get update && sudo apt-get install -yy less
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+      - run:
+          name: Rebuild frontend with backend API Url
+          working_directory: ./frontend
+          command: |
+            export BACKEND_IP=$(aws ec2 describe-instances \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --output text)
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo "API_URL = ${API_URL}"
+            echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
+            cat frontend/.env
+      - run:
+          name: Deploy frontend objects to S3
+          working_directory: ./frontend
+          command: |
+            npm install
+            npm run build
+            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
+            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+      - persist_to_workspace:
+          root: .
+          paths:
+            - frontend/dist
+      - destroy_environment:
+          id: ${CIRCLE_WORKFLOW_ID:0:7}
+          when: on_fail
+      - revert_migrations:
+          id: ${CIRCLE_WORKFLOW_ID:0:7}
+          when: on_fail
+  deploy-backend:
+    docker: 
+      - image: python:3.9.0-alpine
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["66:be:9c:93:c1:34:f6:76:87:93:49:36:54:e3:68:47:16:3f:b5:f6"]
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install dependencies
+          working_directory: /tmp
+          command: |
+            apk add --update ansible curl rsync openssh nodejs npm
+            ansible --version
+            pip install awscli
+            aws --version
+      - run:
+          name: Deploy backend
+          working_directory: ./.circleci/ansible
+          command: |
+            cat inventory
+            ansible-playbook -i inventory deploy-server.yaml -vv
+      - destroy_environment:
+          id: ${CIRCLE_WORKFLOW_ID:0:7}
+          when: on_fail
+      - revert_migrations:
+          id: ${CIRCLE_WORKFLOW_ID:0:7}
+          when: on_fail
 workflows:
   default:
     jobs:
@@ -233,3 +331,9 @@ workflows:
           requires: [deploy-infrastructure]
       - run-migrations:
           requires: [configure-infrastructure]
+      - deploy-backend:
+          requires:
+            - run-migrations
+      - deploy-frontend:
+          requires:
+            - run-migrations
