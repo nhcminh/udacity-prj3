@@ -344,7 +344,8 @@ jobs:
           working_directory: ./backend
           command: |
             export BACKEND_URL="http://${BACKEND_IP}:3030"
-            curl -k "$BACKEND_URL/api/status"
+            echo ${BACKEND_URL}
+            curl -k "${BACKEND_URL}/api/status"
       - run:
           name: Frontend smoke test.
           working_directory: ./backend
