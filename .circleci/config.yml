@@ -179,7 +179,7 @@ jobs:
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" \
               --tags project=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}
       - run:
-          name: Send backend IP to memstash
+          name: Send backend IP to kvdb
           command: |
             pwd
             BACKEND_IP=$(aws ec2 describe-instances \
@@ -187,7 +187,7 @@ jobs:
               --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --output text)
             echo "BACKEND_IP=${BACKEND_IP}"
-            curl -k https://kvdb.io/4bkXvYSkimAiAPH5oL6hx3/BACKEND_IP_${CIRCLE_WORKFLOW_ID:0:7}  -d '${BACKEND_IP}'
+            curl -k https://kvdb.io/4bkXvYSkimAiAPH5oL6hx3/BACKEND_IP_${CIRCLE_WORKFLOW_ID:0:7}  -d ${BACKEND_IP}
       - run:
           name: Add backend IP to ansible inventory
           command: |
