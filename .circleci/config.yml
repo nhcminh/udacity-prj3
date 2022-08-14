@@ -32,9 +32,14 @@ commands:
           name: Destroy backend stack
           when: on_fail
           command: |
+            aws cloudformation delete-stack --stack-name udapeople-backend-<< parameters.workflowID >>
+      - run:
+          name: Destroy frontend stack
+          when: on_fail
+          command: |
             aws s3 rm s3://udapeople-<< parameters.workflowID >> --recursive
             aws s3 rb s3://udapeople-<< parameters.workflowID >> --force
-            aws cloudformation delete-stack --stack-name udapeople-backend-<< parameters.workflowID >>
+            aws cloudformation delete-stack --stack-name udapeople-frontend-<< parameters.workflowID >>
   revert_migrations:
     description: Revert the last migration if successfully run in the current workflow.
     parameters:
@@ -319,6 +324,37 @@ jobs:
             ansible-playbook -i inventory.txt deploy-server.yaml -vv
       - destroy_environment:
           workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
+      - revert_migrations:
+          id: ${CIRCLE_WORKFLOW_ID:0:7}
+          when: on_fail
+  smoke-test:
+    docker: 
+      - image: python:3.9.0-alpine
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install dependencies
+          working_directory: /tmp
+          command: |
+            apk add --update curl nodejs npm
+            pip install awscli
+      - run:
+          name: Backend smoke test.
+          working_directory: ./backend
+          command: |
+            export BACKEND_URL="http://${BACKEND_IP}:3030"
+            curl -k "$BACKEND_URL/api/status"
+      - run:
+          name: Frontend smoke test.
+          working_directory: ./backend
+          command: |
+            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com/index.html"
+            curl -s ${URL} | grep -q "Welcome"
+      - destroy_environment:
+          id: ${CIRCLE_WORKFLOW_ID:0:7}
+          when: on_fail
       - revert_migrations:
           id: ${CIRCLE_WORKFLOW_ID:0:7}
           when: on_fail
