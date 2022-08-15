@@ -334,11 +334,10 @@ jobs:
       - create-dotenv-file
       - run:
           name: Deploy backend
-          working_directory: ./.circleci/ansible
           command: |
-            pwd
+            tar czf backend.tar.gz backend/
             export ANSIBLE_HOST_KEY_CHECKING=false
-            ansible-playbook -i inventory.txt deploy-server.yaml -vvv
+            ansible-playbook -i ./.circleci/ansible/inventory.txt ./.circleci/ansible/deploy-backend.yml -vvv
       - destroy_environment:
           workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert_migrations:
@@ -362,9 +361,9 @@ jobs:
           working_directory: ./backend
           command: |
             BACKEND_IP=$(curl -k https://kvdb.io/4bkXvYSkimAiAPH5oL6hx3/BACKEND_IP_${CIRCLE_WORKFLOW_ID:0:7})
-            export BACKEND_URL="http://${BACKEND_IP}:3030"
-            echo "${BACKEND_URL}"
-            curl -s "${BACKEND_URL}/api/status" -v
+            API_URL="http://${BACKEND_IP}:3030"
+            echo "${API_URL}"
+            curl -s "${API_URL}/api/status" -v
       - run:
           name: Frontend smoke test.
           working_directory: ./backend
