@@ -2,11 +2,9 @@
   shell: env
 
 - name: "copy backend binaries"
-  become: yes
-  synchronize:
-    src: ../../backend/dist
-    dest: /home/ubuntu/uda_app
-    recursive: true
+  unarchive:
+    src: /root/project/backend.tar.gz
+    dest: /home/ubuntu/
 
 - name: "copy node_modules"
   become: yes
