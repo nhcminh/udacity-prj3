@@ -362,6 +362,7 @@ jobs:
           command: |
             BACKEND_IP=$(curl -k https://kvdb.io/4bkXvYSkimAiAPH5oL6hx3/BACKEND_IP_${CIRCLE_WORKFLOW_ID:0:7})
             API_URL="http://${BACKEND_IP}:3030"
+            netstat -lntu
             echo "${API_URL}"
             if curl "${API_URL}/api/status" | grep "ok"
             then
