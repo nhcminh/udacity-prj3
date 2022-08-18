@@ -8,5 +8,32 @@
     - ansible_python_interpreter: /usr/bin/python3
     - ansible_host_key_checking: false
     - ansible_stdout_callback: yaml
+    - os_environment:
+        - key: TYPEORM_CONNECTION
+          value: "{{ _TYPEORM_CONNECTION }}"
+        - key: TYPEORM_ENTITIES
+          value: "{{ _TYPEORM_ENTITIES }}"
+        - key: TYPEORM_HOST
+          value: "{{ _TYPEORM_HOST }}"
+        - key: TYPEORM_PORT
+          value: "{{ _TYPEORM_PORT }}"
+        - key: TYPEORM_USERNAME
+          value: "{{ _TYPEORM_USERNAME }}"
+        - key: TYPEORM_PASSWORD
+          value: "{{ _TYPEORM_PASSWORD }}"
+        - key: TYPEORM_DATABASE
+          value: "{{ _TYPEORM_DATABASE }}"
+        - key: TYPEORM_MIGRATIONS
+          value: "{{ _TYPEORM_MIGRATIONS }}"
+        - key: TYPEORM_MIGRATIONS_DIR
+          value: "{{ _TYPEORM_MIGRATIONS_DIR }}"
+  tasks:
+    - name: customize /etc/environment
+      ansible.builtin.lineinfile:
+        dest: "/etc/environment"
+        state: present
+        regexp: "^{{ item.key }}="
+        line: "{{ item.key }}={{ item.value }}"
+      with_items: "{{ os_environment }}"
   roles:
     - deploy

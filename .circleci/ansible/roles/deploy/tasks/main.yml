@@ -1,26 +1,16 @@
-- name: "show remote environment"
-  shell: env
-
-- name: "copy backend binaries"
-  unarchive:
-    src: /root/project/backend.tar.gz
-    dest: /home/ubuntu/
-
-- name: "copy node_modules"
+---
+- name: "update apt packages."
   become: yes
-  synchronize:
-    src: ../../backend/node_modules
-    dest: /home/ubuntu/uda_app
-    recursive: true
+  apt:
+    update_cache: yes
 
-- name: "delete anything that might already be running"
-  become: true
-  command: pm2 delete all
-  ignore_errors: true
+- name: "upgrade packages"
+  become: yes
+  apt:
+    upgrade: yes
 
-- name: "start server"
-  become: true
+- name: Install dependencies.
   shell: |
-    cd /home/ubuntu/backend
-    pm2 start npm --name backend -- start
-    pm2 ls
+    curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
+    sudo apt-get install -y nodejs
+    sudo npm install pm2 -g
