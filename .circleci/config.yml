@@ -63,7 +63,7 @@ commands:
 jobs:
   build-frontend:
     docker:
-      - image: circleci/node:13.8.0
+      - image: circleci/node:12.0.0
     steps:
       - checkout
       - restore_cache:
@@ -79,7 +79,7 @@ jobs:
           key: frontend-build
   build-backend:
     docker:
-      - image: circleci/node:13.8.0
+      - image: circleci/node:12.0.0
     steps:
       - checkout
       - restore_cache:
@@ -104,7 +104,7 @@ jobs:
           key: backend-build
   test-frontend:
     docker:
-      - image: circleci/node:13.8.0
+      - image: circleci/node:12.0.0
     steps:
       - checkout
       - restore_cache:
@@ -117,7 +117,7 @@ jobs:
             npm run test
   test-backend:
     docker:
-      - image: circleci/node:13.8.0
+      - image: circleci/node:12.0.0
     steps:
       - checkout
       - restore_cache:
@@ -130,7 +130,7 @@ jobs:
             npm run test
   scan-frontend:
     docker:
-      - image: circleci/node:13.8.0
+      - image: circleci/node:12.0.0
     steps:
       - checkout
       - restore_cache:
@@ -147,7 +147,7 @@ jobs:
 
   scan-backend:
     docker:
-      - image: circleci/node:13.8.0
+      - image: circleci/node:12.0.0
     steps:
       - checkout
       - restore_cache:
@@ -234,7 +234,7 @@ jobs:
   run-migrations:
     docker:
       # Docker image that supports NodeJS
-      - image: circleci/node:13.8.0
+      - image: circleci/node:12.0.0
     steps:
       - checkout
       - restore_cache:
@@ -275,7 +275,7 @@ jobs:
   deploy-frontend:
     docker:
       # Docker image that supports NodeJS
-      - image: circleci/node:13.8.0
+      - image: circleci/node:12.0.0
     steps:
       - checkout
       - attach_workspace:
@@ -362,6 +362,7 @@ jobs:
           command: |
             BACKEND_IP=$(curl -k https://kvdb.io/4bkXvYSkimAiAPH5oL6hx3/BACKEND_IP_${CIRCLE_WORKFLOW_ID:0:7})
             API_URL="http://${BACKEND_IP}:3030"
+            netstat -lntu
             echo "${API_URL}"
             if curl "${API_URL}/api/status" | grep "ok"
             then
