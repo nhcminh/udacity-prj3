@@ -316,43 +316,32 @@ jobs:
           when: on_fail
   smoke-test:
     docker: 
-      - image: python:3.7-alpine3.11
+      - image: amazon/aws-cli
     steps:
       - checkout
-      - attach_workspace:
-          at: .
       - run:
-          name: Install dependencies
-          working_directory: /tmp
+          name: Frontend smoke test.
           command: |
-            apk add --update curl nodejs npm
-            pip install awscli
+            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com/#/employees"            
+            echo ${URL} 
+            if curl -s ${URL} | grep "Welcome"
+            then
+              exit 0
+            else
+              exit 1
+            fi
       - run:
           name: Backend smoke test.
-          working_directory: ./backend
           command: |
-            BACKEND_IP=$(curl -k https://kvdb.io/4bkXvYSkimAiAPH5oL6hx3/BACKEND_IP_${CIRCLE_WORKFLOW_ID:0:7})
-            API_URL="http://${BACKEND_IP}:3030"
-            netstat -lntu
+            export BACKEND_IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+            echo "${BACKEND_IP}"
+            export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
             if curl "${API_URL}/api/status" | grep "ok"
             then
-                return 0
+                exit 1
             else
-                return 1
-            fi
-      - run:
-          name: Frontend smoke test.
-          working_directory: ./backend
-          command: |
-            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com/index.html"
-            netstat -lntu
-            curl ${URL} | grep -q "Welcome"
-            then
-            # Change this to 0 after the job fails
-              return 1
-            else
-              return 1
+                exit 1
             fi
       #- destroy_environment:
       #    workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
