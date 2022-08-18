@@ -13,21 +13,6 @@
     apt:
       autoremove: yes
 
-  - name: "install n"
-    become: true
-    npm:
-      name: n
-      global: yes
-      production: yes
-
-  - name: "install pm2"
-    become: true
-    npm:
-      name: pm2
-      global: yes
-      production: yes
-      state: present
-      
   - name: Install dependencies.
     shell: |
       curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
