@@ -12,16 +12,6 @@
     become: true
     apt:
       autoremove: yes
-  - name: "install nodejs 12"
-    shell: |
-      curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
-      sudo apt-get install -y nodejs
-  - name: "install npm"
-    become: true
-    apt:
-      name: ["npm"]
-      state: latest
-      update_cache: yes
 
   - name: "install n"
     become: true
@@ -37,3 +27,9 @@
       global: yes
       production: yes
       state: present
+      
+  - name: Install dependencies.
+    shell: |
+      curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
+      sudo apt-get install -y nodejs
+      sudo npm install pm2 -g
