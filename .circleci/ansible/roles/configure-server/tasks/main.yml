@@ -1,20 +1,19 @@
-  - name: "update apt packages."
-    become: true
-    apt:
-      update_cache: yes
+---
+- name: "Add Node Env"
+  become: true
+  shell: |
+    curl -sL https://deb.nodesource.com/setup_13.x | sudo -E bash -
 
-  - name: "upgrade packages"
-    become: true
-    apt:
-      upgrade: yes
+- name: "Install NodeJS 13"
+  become: true
+  apt:
+    name: ["nodejs"]
+    state: latest
+    update_cache: yes
 
-  - name: "remove dependencies that are no longer required"
-    become: true
-    apt:
-      autoremove: yes
-
-  - name: Install dependencies.
-    shell: |
-      curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
-      sudo apt-get install -y nodejs
-      sudo npm install pm2 -g
+- name: "Install pm2 globally"
+  npm:
+    name: pm2
+    global: yes
+    production: yes
+    state: present
