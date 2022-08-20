@@ -372,6 +372,13 @@ jobs:
       - install_awscli
       - install_nodejs
       - run:
+          name: Update cloudfront distribution
+          command: |
+            aws cloudformation deploy \
+              --template-file .circleci/files/cloudfront.yml \
+              --stack-name InitialStack \
+              --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
+      - run:
           name: Save old Workflow_ID
           command: |
             export OLD_WORKFLOW_ID=$(aws cloudformation \
@@ -379,13 +386,6 @@ jobs:
                       --no-paginate --output text)
             echo "Old Workflow ID: $OLD_WORKFLOW_ID"
             curl https://kvdb.io/4bkXvYSkimAiAPH5oL6hx3/old_workflow_id -d "${OLD_WORKFLOW_ID}"
-      - run:
-          name: Update cloudfront distribution
-          command: |
-            aws cloudformation deploy \
-              --template-file .circleci/files/cloudfront.yml \
-              --stack-name InitialStack \
-              --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
       - destroy-environment
       - revert-migrations
   cleanup:
